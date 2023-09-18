@@ -9,6 +9,9 @@ import { ServiceService } from "./services/ServiceService";
 const category = new CategoryService()
 const service = new ServiceService()
 
+app.get('/', () => {
+  return {message: 'Suporte na aplicação de serviços'}
+})
 
 app.get('/services', () => {
   return service.findAll()
