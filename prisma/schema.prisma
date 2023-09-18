@@ -1,0 +1,1563 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model account {
+  id             Int      @id @default(autoincrement()) @db.UnsignedInt
+  routing_number String   @db.VarChar(255)
+  account_number String   @db.VarChar(255)
+  created_at     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model address {
+  id            Int       @id @default(autoincrement()) @db.UnsignedInt
+  zip_code      String    @db.VarChar(255)
+  street        String    @db.VarChar(255)
+  city          String    @db.VarChar(255)
+  country       String    @db.VarChar(255)
+  district      String    @db.VarChar(255)
+  state         String    @db.VarChar(255)
+  number        Int
+  complement    String?   @db.VarChar(255)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+  location_name String    @db.VarChar(255)
+  is_active     Int       @db.UnsignedTinyInt
+  latitude      Float     @default(0.00000000)
+  longitude     Float     @default(0.00000000)
+  ledger_id     Int?      @db.UnsignedInt
+  provider_id   Int?      @db.UnsignedInt
+  ledger        ledger?   @relation(fields: [ledger_id], references: [id], onUpdate: NoAction, map: "address_ledger_id_foreign")
+  // provider      provider? @relation(fields: [provider_id], references: [id], onUpdate: NoAction, map: "address_provider_id_foreign")
+
+  @@index([ledger_id], map: "address_ledger_id_foreign")
+  @@index([provider_id], map: "address_provider_id_foreign")
+}
+
+model admin {
+  id             Int         @id @default(autoincrement()) @db.UnsignedInt
+  username       String      @db.VarChar(255)
+  password       String      @db.VarChar(255)
+  remember_token String?     @db.VarChar(255)
+  created_at     DateTime    @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at     DateTime    @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  address        String?     @db.VarChar(255)
+  latitude       Float?      @db.Float
+  longitude      Float?      @db.Float
+  profile_id     Int?        @db.UnsignedInt
+  type           admin_type?
+  name           String?     @db.VarChar(255)
+  picture        String?     @db.VarChar(255)
+  ledger         ledger[]
+  messages       messages[]
+
+  @@index([profile_id], map: "admin_profile_id_foreign")
+}
+
+model admin_institution {
+  id             Int       @id @default(autoincrement()) @db.UnsignedInt
+  admin_id       Int?      @db.UnsignedInt
+  institution_id Int?      @db.UnsignedInt
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([admin_id], map: "admin_institution_admin_id_foreign")
+  @@index([institution_id], map: "admin_institution_institution_id_foreign")
+}
+
+model admin_partner {
+  id         Int @id @default(autoincrement()) @db.UnsignedInt
+  admin_id   Int @db.UnsignedInt
+  partner_id Int @db.UnsignedInt
+
+  @@index([admin_id], map: "admin_partner_admin_id_foreign")
+  @@index([partner_id], map: "admin_partner_partner_id_foreign")
+}
+
+model admin_permission {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  admin_id      Int
+  permission_id Int
+  created_at    DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at    DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model bank {
+  id                       Int      @id @default(autoincrement()) @db.UnsignedInt
+  name                     String   @db.VarChar(255)
+  code                     String   @db.VarChar(255)
+  created_at               DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at               DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  agency_max_length        Int?     @default(4)
+  agency_digit_required    Boolean? @default(false)
+  agency_digit_max_length  Int?     @default(1)
+  account_max_length       Int?     @default(11)
+  account_digit_required   Boolean? @default(true)
+  account_digit_max_length Int?     @default(1)
+  country_id               Int?     @db.UnsignedInt
+  ispb                     String?  @db.VarChar(255)
+  country                  country? @relation(fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bank_country_id_foreign")
+
+  @@index([country_id], map: "bank_country_id_foreign")
+}
+
+model canonical_messages {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  shortcode  String    @db.VarChar(255)
+  message    String    @db.VarChar(255)
+}
+
+model cash {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  key        String   @db.VarChar(255)
+  value      Float    @db.Float
+  expiry     Int
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model certificate {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  icon       String?   @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model cnab_files {
+  id           Int        @id @default(autoincrement()) @db.UnsignedInt
+  rem_url_file String?    @db.VarChar(255)
+  ret_url_file String?    @db.VarChar(255)
+  rem_total    Float      @default(0.00)
+  ret_total    Float      @default(0.00)
+  date_rem     DateTime?  @db.DateTime(0)
+  date_ret     DateTime?  @db.DateTime(0)
+  created_at   DateTime?  @db.Timestamp(0)
+  updated_at   DateTime?  @db.Timestamp(0)
+  withdraw     withdraw[]
+}
+
+model compensation {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  finance_id Int?     @db.UnsignedInt
+  ledger_id  Int      @db.UnsignedInt
+  request_id Int      @db.UnsignedInt
+  value      Float
+  level      Int
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+
+  @@index([finance_id], map: "compensation_finance_id_foreign")
+  @@index([ledger_id], map: "compensation_ledger_id_foreign")
+  @@index([request_id], map: "compensation_request_id_foreign")
+}
+
+model conversation_request {
+  id                Int       @id @default(autoincrement()) @db.UnsignedInt
+  conversation_id   Int       @db.UnsignedInt
+  request_id        Int       @db.UnsignedInt
+  last_bid          Float?
+  user_accepted     Boolean   @default(false)
+  provider_accepted Boolean   @default(false)
+  proposed_by_id    Int?      @db.UnsignedInt
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+  ledger            ledger?   @relation(fields: [proposed_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "conversation_request_proposed_by_id_foreign")
+
+  @@index([conversation_id], map: "conversation_request_conversation_id_index")
+  @@index([proposed_by_id], map: "conversation_request_proposed_by_foreign")
+  @@index([request_id], map: "conversation_request_request_id_index")
+}
+
+model conversations {
+  id           Int           @id @default(autoincrement()) @db.UnsignedInt
+  user_one     Int
+  user_two     Int
+  status       Boolean
+  created_at   DateTime?     @db.Timestamp(0)
+  updated_at   DateTime?     @db.Timestamp(0)
+  request_id   Int           @db.UnsignedInt
+  help_id      Int?          @db.UnsignedInt
+  request_help request_help? @relation(fields: [help_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "conversations_help_id_foreign")
+
+  @@index([help_id], map: "conversations_help_id_foreign")
+  @@index([help_id], map: "conversations_help_id_index")
+  @@index([request_id], map: "conversations_request_id_index")
+  @@index([user_one], map: "conversations_user_one_index")
+  @@index([user_two], map: "conversations_user_two_index")
+}
+
+model country {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  name       String   @db.VarChar(255)
+  iso        String   @db.VarChar(255)
+  code       Int?     @db.UnsignedInt
+  phone_code Int?     @db.UnsignedInt
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  bank       bank[]
+}
+
+model documents {
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  name         String   @db.VarChar(255)
+  created_at   DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at   DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  nick         String?  @db.VarChar(255)
+  icon         String?  @db.VarChar(255)
+  required     Boolean  @default(false)
+  has_validity Boolean  @default(false)
+}
+
+model email_template {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  subject     String   @db.VarChar(255)
+  copy_emails String   @db.VarChar(255)
+  created_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  key         String   @unique(map: "email_template_key_unique") @db.VarChar(255)
+  from        String   @db.VarChar(255)
+  content     String   @db.LongText
+  sample      Json?
+  is_used     Boolean  @default(true)
+}
+
+model failed_jobs {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.Text
+  failed_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  exception  String   @db.Text
+}
+
+model finance {
+  id                                                 Int        @id @default(autoincrement()) @db.UnsignedInt
+  ledger_id                                          Int        @db.UnsignedInt
+  referral_id                                        Int?       @db.UnsignedInt
+  request_id                                         Int?       @db.UnsignedInt
+  inserted_by                                        Int?       @db.UnsignedInt
+  value                                              Float
+  reason                                             String     @db.VarChar(255)
+  description                                        String?    @db.VarChar(255)
+  compensation_date                                  DateTime   @db.DateTime(0)
+  created_at                                         DateTime   @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at                                         DateTime   @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  ledger_bank_account_id                             Int?       @db.UnsignedInt
+  withdraw_withdraw_finance_withdraw_idTofinance     withdraw[] @relation("withdraw_finance_withdraw_idTofinance")
+  withdraw_withdraw_finance_withdraw_tax_idTofinance withdraw[] @relation("withdraw_finance_withdraw_tax_idTofinance")
+
+  @@index([inserted_by], map: "finance_inserted_by_foreign")
+  @@index([ledger_id], map: "finance_ledger_id_foreign")
+  @@index([referral_id], map: "finance_referral_id_foreign")
+  @@index([request_id], map: "finance_request_id_foreign")
+}
+
+model games {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model generic_keywords {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  keyword    String   @db.VarChar(255)
+  alias      String   @db.VarChar(255)
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model icons {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  icon_name  String   @db.VarChar(255)
+  icon_code  String   @db.VarChar(255)
+  icon_type  String   @db.VarChar(255)
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model information {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  title      String   @db.VarChar(255)
+  content    Bytes?   @db.MediumBlob
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  icon       String   @db.VarChar(255)
+  type       String   @db.VarChar(255)
+  url_key    String?  @unique(map: "information_url_key_unique") @db.VarChar(255)
+  is_service Boolean? @default(false)
+}
+
+model institution {
+  id                   Int                         @id @default(autoincrement()) @db.UnsignedInt
+  name                 String                      @db.VarChar(255)
+  document             String                      @db.VarChar(20)
+  type                 institution_type?
+  logo                 String?                     @db.VarChar(255)
+  admin_id             Int?                        @db.UnsignedInt
+  api_key              String?                     @db.VarChar(255)
+  created_at           DateTime?                   @db.Timestamp(0)
+  updated_at           DateTime?                   @db.Timestamp(0)
+  social_reason        String                      @db.VarChar(255)
+  responsible          String                      @db.VarChar(255)
+  responsible_position String                      @db.VarChar(255)
+  phone                String                      @db.VarChar(255)
+  acknowledgement      institution_acknowledgement
+  address_id           Int?                        @db.UnsignedInt
+  default_user_id      Int?                        @db.UnsignedInt
+
+  @@index([address_id], map: "institution_address_id_foreign")
+  @@index([admin_id], map: "institution_admin_id_foreign")
+  @@index([default_user_id], map: "institution_default_user_id_foreign")
+}
+
+model interpolated_request_location {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  request_id Int      @db.UnsignedInt
+  latitude   Float
+  longitude  Float
+  distance   Float
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+
+  @@index([request_id], map: "interpolated_request_location_request_id_foreign")
+}
+
+model jobs {
+  id           BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  queue        String @db.VarChar(255)
+  payload      String @db.Text
+  attempts     Int    @db.UnsignedTinyInt
+  reserved     Int    @db.UnsignedTinyInt
+  reserved_at  Int?   @db.UnsignedInt
+  available_at Int    @db.UnsignedInt
+  created_at   Int    @db.UnsignedInt
+}
+
+model ledger {
+  id                   Int                    @id @default(autoincrement()) @db.UnsignedInt
+  user_id              Int?                   @db.UnsignedInt
+  referral_code        String                 @db.VarChar(255)
+  total_referrals      Int?
+  amount_earned        Float?                 @default(0)
+  amount_spent         Float?                 @default(0)
+  created_at           DateTime               @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at           DateTime               @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  provider_id          Int?                   @db.UnsignedInt
+  parent_id            Int?                   @db.UnsignedInt
+  admin_id             Int?                   @db.UnsignedInt
+  address              address[]
+  conversation_request conversation_request[]
+  admin                admin?                 @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ledger_admin_id_foreign")
+  transaction          transaction[]
+
+  @@index([admin_id], map: "ledger_admin_id_foreign")
+  @@index([user_id], map: "ledger_owner_id_foreign")
+  @@index([parent_id], map: "ledger_parent_id_foreign")
+  @@index([provider_id], map: "ledger_provider_id_foreign")
+  @@index([referral_code], map: "ledger_referral_code_index")
+}
+
+model ledger_bank_account {
+  id                   Int                             @id @default(autoincrement()) @db.UnsignedInt
+  provider_id          Int?                            @db.UnsignedInt
+  bank_id              String                          @db.VarChar(255)
+  agency               String                          @db.VarChar(255)
+  agency_digit         Int?                            @db.UnsignedInt
+  account              String                          @db.VarChar(255)
+  account_digit        String                          @db.VarChar(255)
+  holder               String                          @db.VarChar(255)
+  document             String                          @db.VarChar(255)
+  recipient_id         String?                         @db.VarChar(255)
+  created_at           DateTime                        @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at           DateTime                        @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  person_type          ledger_bank_account_person_type @default(individual)
+  ledger_id            Int?                            @db.UnsignedInt
+  user_id              Int?                            @db.UnsignedInt
+  account_type         String                          @db.VarChar(255)
+  birthday_date        DateTime?                       @db.Timestamp(0)
+  provider_document_id Int?                            @db.UnsignedInt
+  gateway              String?                         @default("cielo") @db.VarChar(50)
+
+  @@index([ledger_id], map: "ledger_bank_account_ledger_id_foreign")
+  @@index([provider_document_id], map: "ledger_bank_account_provider_document_id_foreign")
+  @@index([provider_id], map: "ledger_bank_account_provider_id_foreign")
+  @@index([user_id], map: "ledger_bank_account_user_id_foreign")
+}
+
+model location {
+  id                       Int                        @id @default(autoincrement()) @db.UnsignedInt
+  name                     String                     @db.VarChar(255)
+  created_at               DateTime                   @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at               DateTime                   @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  radius                   Float
+  timeout_server_wait      Int                        @db.UnsignedInt
+  time_inactivity_provider Int                        @db.UnsignedInt
+  polygons                 polygons[]
+  provider_type_categories provider_type_categories[]
+}
+
+model location_service {
+  id               Int                              @id @default(autoincrement()) @db.UnsignedInt
+  base_price       Float
+  maximum_distance Int
+  cancel_price     Float
+  comission_rate   Float
+  commission_type  location_service_commission_type @default(percentage)
+  provider_type_id Int                              @db.UnsignedInt
+  category_id      Int?
+  location_id      Int                              @db.UnsignedInt
+  created_at       DateTime                         @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at       DateTime                         @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  time_attendence  Int                              @db.UnsignedInt
+  additional       Float?
+
+  @@index([location_id], map: "location_service_location_id_foreign")
+  @@index([provider_type_id], map: "location_service_provider_type_id_foreign")
+}
+
+model messages {
+  id                    Int       @id @default(autoincrement()) @db.UnsignedInt
+  message               String    @db.Text
+  is_seen               Boolean   @default(false)
+  deleted_from_sender   Boolean   @default(false)
+  deleted_from_receiver Boolean   @default(false)
+  user_id               Int
+  admin_id              Int?      @db.UnsignedInt
+  conversation_id       Int
+  created_at            DateTime? @db.Timestamp(0)
+  updated_at            DateTime? @db.Timestamp(0)
+  picture               String?   @db.VarChar(255)
+  admin                 admin?    @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "messages_admin_id_foreign")
+
+  @@index([admin_id], map: "messages_admin_id_foreign")
+  @@index([admin_id], map: "messages_admin_id_index")
+  @@index([conversation_id], map: "messages_conversation_id_index")
+  @@index([is_seen], map: "messages_is_seen_index")
+  @@index([user_id], map: "messages_user_id_index")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model migrations {
+  migration String @db.VarChar(255)
+  batch     Int
+
+  @@ignore
+}
+
+model notification {
+  id              Int                   @id @default(autoincrement()) @db.UnsignedInt
+  send_to         notification_send_to
+  type            notification_type
+  platform        notification_platform
+  recipient_id    Int?
+  title           String                @db.VarChar(255)
+  message         String                @db.VarChar(255)
+  content         String?               @db.Text
+  is_scheduled    Boolean
+  scheduling_date DateTime?             @db.DateTime(0)
+  job_id          Int
+  created_at      DateTime              @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at      DateTime              @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  location_id     Int?                  @db.UnsignedInt
+  partner_id      Int?                  @db.UnsignedInt
+
+  @@index([location_id], map: "notification_location_id_foreign")
+  @@index([partner_id], map: "notification_partner_id_foreign")
+}
+
+model notifications_provider_step {
+  id            Int                                       @id @default(autoincrement()) @db.UnsignedInt
+  provider_id   Int                                       @db.UnsignedInt
+  register_step notifications_provider_step_register_step
+  active        Boolean
+  email         Int
+  push          Int
+  created_at    DateTime                                  @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at    DateTime                                  @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+
+  @@index([provider_id], map: "notifications_provider_step_provider_id_foreign")
+}
+
+model partner {
+  id                 Int      @id @default(autoincrement()) @db.UnsignedInt
+  name               String   @db.VarChar(255)
+  created_at         DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at         DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  commission_default Int?
+}
+
+model partner_location {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  partner_id  Int      @db.UnsignedInt
+  location_id Int      @db.UnsignedInt
+  commission  Float
+  sell_value  Float
+  month_value Float
+  created_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+
+  @@index([location_id], map: "partner_location_location_id_foreign")
+  @@index([partner_id], map: "partner_location_partner_id_foreign")
+}
+
+model payment {
+  id          Int         @id @default(autoincrement()) @db.UnsignedInt
+  card_type   String      @db.VarChar(255)
+  created_at  DateTime    @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at  DateTime    @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  user_id     Int?        @db.UnsignedInt
+  customer_id String      @db.VarChar(255)
+  last_four   String      @db.VarChar(255)
+  card_token  String?     @db.VarChar(255)
+  is_default  Int         @default(0) @db.TinyInt
+  is_active   Int
+  encrypted   String?     @db.Text
+  gateway     String      @db.VarChar(255)
+  provider_id Int?
+  signature   signature[]
+
+  @@index([user_id], map: "payment_owner_id_index")
+}
+
+model permission {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  name       String   @db.VarChar(255)
+  code       String   @db.VarChar(255)
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  parent_id  Int?     @db.UnsignedInt
+  is_menu    Boolean?
+  url        String?  @db.VarChar(255)
+  order      Int?     @db.UnsignedInt
+  icon       String?  @db.VarChar(255)
+
+  @@index([parent_id], map: "permission_parent_id_foreign")
+}
+
+model permission_sub_action {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  name       String   @db.VarChar(255)
+  parent_id  Int
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model plan {
+  id                Int         @id @default(autoincrement()) @db.UnsignedInt
+  signature_id      Int?
+  name              String      @db.VarChar(255)
+  period            Int
+  plan_price        Float
+  client            plan_client
+  validity          Int
+  visibility        Int         @default(1)
+  location          Int?
+  created_at        DateTime?   @db.Timestamp(0)
+  updated_at        DateTime?   @db.Timestamp(0)
+  allow_cancelation Boolean?    @default(true)
+  required          Boolean     @default(false)
+}
+
+model polygons {
+  id          BigInt                 @id @default(autoincrement()) @db.UnsignedBigInt
+  location_id Int                    @db.UnsignedInt
+  area        Unsupported("polygon")
+  created_at  DateTime?              @db.Timestamp(0)
+  updated_at  DateTime?              @db.Timestamp(0)
+  location    location               @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "polygons_location_id_foreign")
+
+  @@index([location_id], map: "polygons_location_id_foreign")
+}
+
+model profile {
+  id         Int           @id @default(autoincrement()) @db.UnsignedInt
+  name       String        @db.VarChar(255)
+  created_at DateTime      @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime      @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  type       profile_type?
+}
+
+model profile_permission {
+  id            Int @id @default(autoincrement()) @db.UnsignedInt
+  profile_id    Int @db.UnsignedInt
+  permission_id Int @db.UnsignedInt
+
+  @@index([permission_id], map: "profile_permission_permission_id_foreign")
+  @@index([profile_id], map: "profile_permission_profile_id_foreign")
+}
+
+model promo_code_location {
+  id            Int @id @default(autoincrement()) @db.UnsignedInt
+  promo_code_id Int @db.UnsignedInt
+  location_id   Int @db.UnsignedInt
+
+  @@index([location_id], map: "promo_code_location_location_id_foreign")
+  @@index([promo_code_id], map: "promo_code_location_promo_code_id_foreign")
+}
+
+model promo_code_provider_type {
+  id               Int @id @default(autoincrement()) @db.UnsignedInt
+  promo_codes_id   Int @db.UnsignedInt
+  provider_type_id Int @db.UnsignedInt
+
+  @@index([promo_codes_id], map: "promo_code_provider_type_promo_codes_id_foreign")
+  @@index([provider_type_id], map: "promo_code_provider_type_provider_type_id_foreign")
+}
+
+model promo_codes {
+  id                  Int                     @id @default(autoincrement()) @db.UnsignedInt
+  coupon_code         String                  @db.VarChar(255)
+  value               Int
+  type                Int
+  uses                Int
+  state               Int
+  start_date          DateTime                @db.DateTime(0)
+  expiry              DateTime                @db.DateTime(0)
+  created_at          DateTime                @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at          DateTime                @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  start_area          Unsupported("polygon")?
+  destination_area    Unsupported("polygon")?
+  location_id         Int?                    @db.UnsignedInt
+  max_value           Float?
+  unlimited_user_uses Boolean
+  use_credit_user     Boolean
+
+  @@index([coupon_code], map: "promo_codes_coupon_code_index")
+  @@index([location_id], map: "promo_codes_location_id_foreign")
+}
+
+model promo_history {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  user_id       String   @db.VarChar(255)
+  promo_code    String   @db.VarChar(255)
+  amount_earned Int
+  created_at    DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at    DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model provider {
+  id                     Int                     @id @default(autoincrement()) @db.UnsignedInt
+  first_name             String                  @db.VarChar(255)
+  last_name              String                  @db.VarChar(255)
+  phone                  String                  @db.VarChar(255)
+  email                  String                  @db.VarChar(255)
+  password               String                  @db.VarChar(255)
+  picture                String?                 @db.VarChar(255)
+  bio                    String?                 @db.VarChar(255)
+  address                String                  @db.VarChar(255)
+  state                  String                  @db.VarChar(255)
+  country                String                  @db.VarChar(255)
+  zipcode                String                  @db.VarChar(255)
+  device_token           String?                 @db.VarChar(255)
+  device_type            String?                 @default("") @db.VarChar(255)
+  login_by               provider_login_by
+  social_unique_id       String?                 @db.VarChar(255)
+  token                  String                  @db.VarChar(255)
+  email_activation       Int                     @default(1)
+  token_expiry           Int
+  created_at             DateTime                @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at             DateTime                @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  is_active              Int                     @default(0)
+  is_available           Int?                    @default(1)
+  address_longitude      Float                   @default(0.00000000)
+  address_latitude       Float                   @default(0.00000000)
+  latitude               Float                   @default(0.00000000)
+  longitude              Float                   @default(0.00000000)
+  is_approved            Int
+  type                   Int?
+  merchant_id            String?                 @db.VarChar(255)
+  account_id             String?                 @db.Text
+  last_4                 String?                 @db.Text
+  activation_code        String                  @db.VarChar(255)
+  timezone               String                  @default("UTC") @db.VarChar(255)
+  deleted_at             DateTime?               @db.Timestamp(0)
+  old_latitude           Float                   @default(0.00000000)
+  old_longitude          Float                   @default(0.00000000)
+  bearing                Float                   @default(0.00000000)
+  car_model              String?                 @db.VarChar(255)
+  car_number             String                  @default("0") @db.VarChar(255)
+  rate                   Float                   @default(5)
+  rate_count             BigInt                  @default(0)
+  payment_remaining      Float                   @default(0.00)
+  refund_remaining       Float                   @default(0.00)
+  provider_transfer_date DateTime?               @db.DateTime(0)
+  address_number         String?                 @db.VarChar(255)
+  address_complements    String?                 @db.VarChar(255)
+  address_neighbour      String?                 @db.VarChar(255)
+  address_city           String?                 @db.VarChar(255)
+  status_id              Int
+  car_brand              String?                 @db.VarChar(255)
+  attendance_history     String?                 @db.Text
+  residencia             Boolean
+  banking                Boolean
+  crlv                   Boolean
+  register_rejected      Boolean
+  cnh                    String?                 @db.VarChar(11)
+  all_docs               Boolean
+  approved_by            Int?                    @db.UnsignedInt
+  started_by             Int?                    @db.UnsignedInt
+  location_id            Int?                    @db.UnsignedInt
+  receiving_request      Boolean
+  register_step          provider_register_step?
+  register_by            Int?                    @db.UnsignedInt
+  religion_id            Int                     @db.UnsignedInt
+  birthday_date          DateTime?               @db.DateTime(0)
+  remember_token         String                  @db.VarChar(255)
+  gender                 provider_gender?        @default(other)
+  last_activity          DateTime                @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  signature_id           Int?
+  document               String?                 @db.VarChar(255)
+  theme_id               Int?                    @db.UnsignedInt
+  coren                  String?                 @db.Text
+  professional_document  String?                 @db.Text
+  register_latitude      Float?
+  register_longitude     Float?
+  // address                address[]
+  provider_payments      provider_payments[]
+  request_help           request_help[]
+
+  @@index([approved_by], map: "provider_approved_by_foreign")
+  @@index([location_id], map: "provider_location_id_foreign")
+  @@index([register_by], map: "provider_register_by_foreign")
+  @@index([started_by], map: "provider_started_by_foreign")
+  @@index([theme_id], map: "provider_theme_id_index")
+  @@index([religion_id], map: "provider_type_documents_document_id_foreign")
+  @@index([email], map: "walker_email_index")
+  @@index([first_name], map: "walker_first_name_index")
+  @@index([last_name], map: "walker_last_name_index")
+}
+
+model provider_availability {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  provider_id Int
+  start       DateTime @db.DateTime(0)
+  end         DateTime @db.DateTime(0)
+  created_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model provider_certificate {
+  provider_id    Int       @db.UnsignedInt
+  certificate_id Int       @db.UnsignedInt
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@id([provider_id, certificate_id])
+  @@index([certificate_id], map: "provider_certificate_certificate_id_foreign")
+}
+
+model provider_documents {
+  id            Int       @id @default(autoincrement()) @db.UnsignedInt
+  provider_id   Int
+  document_id   String    @db.VarChar(255)
+  url           String    @db.VarChar(255)
+  created_at    DateTime  @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at    DateTime  @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  file_token    String?   @db.VarChar(255)
+  date_validity DateTime? @db.Date
+}
+
+model provider_payments {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  payment_id  Int       @db.UnsignedInt
+  provider_id Int       @db.UnsignedInt
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  provider    provider  @relation(fields: [provider_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provider_payments_provider_id_foreign")
+
+  @@index([provider_id], map: "provider_payments_provider_id_foreign")
+}
+
+model provider_schedules_times {
+  id                   Int       @id @default(autoincrement()) @db.UnsignedInt
+  provider_id          Int
+  day_id               Int
+  enabled              Boolean
+  start_time           String?   @db.VarChar(255)
+  end_time             String?   @db.VarChar(255)
+  working_time_minutes Int
+  interval_id          Int
+  created_at           DateTime? @db.Timestamp(0)
+  updated_at           DateTime? @db.Timestamp(0)
+}
+
+model provider_services {
+  id              Int                               @id @default(autoincrement()) @db.UnsignedInt
+  provider_id     String                            @db.VarChar(255)
+  type            String                            @db.VarChar(255)
+  created_at      DateTime                          @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at      DateTime                          @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  category        Int                               @db.UnsignedInt
+  base_price      Float?                            @db.Float
+  commission_rate Float
+  is_visible      Boolean
+  commission_type provider_services_commission_type @default(percentage)
+  icon            String?                           @db.VarChar(255)
+  icon_map        String?                           @db.VarChar(255)
+
+  @@index([category], map: "provider_services_category_foreign")
+  @@index([provider_id], map: "walker_services_provider_id_index")
+  @@index([type], map: "walker_services_type_index")
+}
+
+model provider_status {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  name       String   @db.VarChar(255)
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  color      String?  @db.VarChar(100)
+}
+
+model provider_type {
+  id                       Int                           @id @default(autoincrement()) @db.UnsignedInt
+  name                     String                        @db.VarChar(255)
+  max_size                 String                        @default("0") @db.VarChar(255)
+  is_visible               Boolean                       @default(true)
+  created_at               DateTime?                     @db.Timestamp(0)
+  updated_at               DateTime?                     @db.Timestamp(0)
+  icon                     String?                       @db.VarChar(255)
+  commission_rate          Float                         @db.Float
+  min_price                Float                         @db.Float
+  icon_maps                String                        @db.VarChar(255)
+  color                    String?                       @default("#333333") @db.VarChar(255)
+  commission_type          provider_type_commission_type @default(percentage)
+  cancel_price             Float                         @default(0.00) @db.Float
+  time_attendence          Decimal                       @default(0.00) @db.Decimal(5, 2)
+  additional               Float?                        @db.Float
+  deleted_at               DateTime?                     @db.Timestamp(0)
+  description              String                        @db.Text
+  banner                   String?                       @db.VarChar(255)
+  category_id              Int?                          @db.UnsignedInt
+  provider_type_categories provider_type_categories?     @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "provider_type_category_id_foreign")
+
+  @@index([category_id], map: "provider_type_category_id_foreign")
+}
+
+model provider_type_categories {
+  id              Int             @id @default(autoincrement()) @db.UnsignedInt
+  name            String          @db.VarChar(255)
+  is_visible      Boolean
+  is_default      Boolean
+  created_at      DateTime        @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at      DateTime        @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  time_attendence Int             @db.UnsignedInt
+  additional      Int?            @db.UnsignedInt
+  deleted_at      DateTime?       @db.Timestamp(0)
+  location_id     Int?            @db.UnsignedInt
+  locations       Json?
+  provider_type   provider_type[]
+  location        location?       @relation(fields: [location_id], references: [id], onUpdate: NoAction, map: "provider_type_categories_location_id_foreign")
+
+  @@index([location_id], map: "provider_type_categories_location_id_foreign")
+}
+
+model provider_type_documents {
+  id               Int      @id @default(autoincrement()) @db.UnsignedInt
+  provider_type_id Int      @db.UnsignedInt
+  document_id      Int      @db.UnsignedInt
+  created_at       DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at       DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+
+  @@index([document_id], map: "provider_type_documents_document_id_foreign")
+  @@index([provider_type_id], map: "provider_type_documents_provider_type_id_foreign")
+}
+
+model queues {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  queue      String?  @db.VarChar(255)
+  status     Int      @default(0)
+  retries    Int      @default(0)
+  timestamp  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  payload    String?  @db.LongText
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model religion {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  is_visible Int
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model report_request {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  report     String?   @db.VarChar(255)
+  check      Boolean?  @default(false)
+  checked_at DateTime? @db.DateTime(0)
+  checked_by Int?
+  request_id Int
+  comment    String?   @db.VarChar(255)
+}
+
+model request {
+  id                           Int            @id @default(autoincrement()) @db.UnsignedInt
+  user_id                      Int            @db.UnsignedInt
+  status                       Int
+  confirmed_provider           Int
+  current_provider             Int
+  request_start_time           DateTime       @db.DateTime(0)
+  created_at                   DateTime?      @db.Timestamp(0)
+  updated_at                   DateTime?      @db.Timestamp(0)
+  is_provider_started          Int
+  is_provider_arrived          Int
+  is_started                   Int
+  is_completed                 Int
+  is_user_rated                Int
+  is_provider_rated            Int
+  distance                     Float          @db.Float
+  time                         Float          @db.Float
+  total                        Float          @db.Float
+  is_paid                      Int
+  card_payment                 Float          @db.Float
+  ledger_payment               Float          @db.Float
+  is_cancelled                 Int
+  refund                       Float          @default(0.00) @db.Float
+  transfer_amount              String         @default("0") @db.VarChar(255)
+  later                        Boolean        @default(false)
+  D_latitude                   Float          @default(0.00000000)
+  D_longitude                  Float          @default(0.00000000)
+  security_key                 String?        @db.VarChar(11)
+  payment_mode                 Int            @default(0)
+  payment_id                   String?        @db.Text
+  promo_payment                Float          @default(0.00) @db.Float
+  promo_code                   String         @db.VarChar(255)
+  promo_id                     Int            @default(0)
+  latitude                     Float
+  longitude                    Float
+  time_zone                    String         @default("UTC") @db.VarChar(255)
+  src_address                  String         @default("Address Not Available") @db.VarChar(255)
+  dest_address                 String         @default("Address Not Available") @db.VarChar(255)
+  payment_remaining            Float          @default(0.00)
+  refund_remaining             Float          @default(0.00)
+  req_create_user_time         String         @db.VarChar(255)
+  payment_platform_rate        Float          @db.Float
+  provider_commission          Float          @db.Float
+  is_base_fee_paid             Int
+  is_cancel_fee_paid           Int
+  provider_acceptance_time     DateTime       @db.DateTime(0)
+  base_tax_transaction_id      Int
+  request_price_transaction_id Int
+  request_finish_time          DateTime       @db.DateTime(0)
+  distance_error               Boolean        @default(false)
+  provider_started_time        DateTime       @db.DateTime(0)
+  provider_arrived_time        DateTime       @db.DateTime(0)
+  cancellation_time            DateTime       @db.DateTime(0)
+  history_detail               String         @db.VarChar(255)
+  check_limit_transaction_id   Int?           @db.UnsignedInt
+  sent_for_multiple            Boolean        @default(false)
+  address_reference            String?        @db.VarChar(255)
+  payment_tax                  Float?
+  gross_value                  Float?
+  location_id                  Int?           @db.UnsignedInt
+  is_schedule                  Int            @default(0)
+  scheduled_id                 Int?           @db.UnsignedInt
+  max_service_time             Int            @default(0) @db.UnsignedInt
+  additional_time              Int            @default(0) @db.UnsignedInt
+  additional_hour_price        Float          @default(0.00)
+  additional_total_value       Float          @default(0.00)
+  base_price                   Float          @default(0.00)
+  obs_service                  String?        @db.Text
+  theme_id                     Int?           @db.UnsignedInt
+  displacement_fee             Float
+  is_completed_bt_the_provider Int?
+  request_help                 request_help[]
+
+  @@index([is_completed], map: "request_is_completed_index")
+  @@index([is_started], map: "request_is_started_index")
+  @@index([is_provider_arrived], map: "request_is_walker_arrived_index")
+  @@index([is_provider_started], map: "request_is_walker_started_index")
+  @@index([location_id], map: "request_location_id_foreign")
+  @@index([user_id], map: "request_owner_id_foreign")
+  @@index([scheduled_id], map: "request_scheduled_id_foreign")
+  @@index([theme_id], map: "request_theme_id_index")
+}
+
+model request_cancelation {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  user_id     Int
+  provider_id Int
+  request_id  Int
+  reason      String   @db.VarChar(255)
+  created_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  cancelledBy String?  @db.VarChar(255)
+}
+
+model request_event {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  request_id  Int      @db.UnsignedInt
+  type        Int      @default(0)
+  latitude    Float    @default(0)
+  longitude   Float    @default(0)
+  description String   @db.VarChar(255)
+  created_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+
+  @@index([request_id], map: "request_event_request_id_foreign")
+}
+
+model request_event_picture {
+  id               Int      @id @default(autoincrement()) @db.UnsignedInt
+  request_event_id Int      @db.UnsignedInt
+  picture          String   @db.VarChar(255)
+  created_at       DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at       DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+
+  @@index([request_event_id], map: "request_event_picture_request_event_id_foreign")
+}
+
+model request_help {
+  id            Int                  @id @default(autoincrement()) @db.UnsignedInt
+  request_id    Int                  @db.UnsignedInt
+  user_id       Int?                 @db.UnsignedInt
+  provider_id   Int?                 @db.UnsignedInt
+  author        request_help_author?
+  created_at    DateTime?            @db.Timestamp(0)
+  updated_at    DateTime?            @db.Timestamp(0)
+  conversations conversations[]
+  provider      provider?            @relation(fields: [provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "request_help_provider_id_foreign")
+  request       request              @relation(fields: [request_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "request_help_request_id_foreign")
+  user          user?                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "request_help_user_id_foreign")
+
+  @@index([provider_id], map: "request_help_provider_id_foreign")
+  @@index([request_id], map: "request_help_request_id_foreign")
+  @@index([user_id], map: "request_help_user_id_foreign")
+}
+
+model request_location {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  request_id Int      @db.UnsignedInt
+  latitude   Float
+  longitude  Float
+  distance   Float    @db.Float
+  bearing    Float    @default(0.00000000)
+  order      Int      @default(0)
+  error      Boolean  @default(false)
+  accuracy   Float    @default(0.00) @db.Float
+
+  @@index([request_id], map: "walk_location_request_id_index")
+}
+
+model request_meta {
+  id                    Int      @id @default(autoincrement()) @db.UnsignedInt
+  request_id            Int      @db.UnsignedInt
+  provider_id           Int      @db.UnsignedInt
+  status                Int
+  created_at            DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at            DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  is_cancelled          Int
+  request_received      Int      @default(0)
+  request_received_time DateTime @db.DateTime(0)
+
+  @@index([request_id], map: "request_meta_request_id_foreign")
+  @@index([provider_id], map: "request_meta_walker_id_foreign")
+}
+
+model request_options {
+  id                   Int      @id @default(autoincrement()) @db.UnsignedInt
+  provider_service_id  Int      @db.UnsignedInt
+  request_id           Int      @db.UnsignedInt
+  vehicle_brand        String   @db.VarChar(255)
+  vehicle_plate        String   @db.VarChar(255)
+  vehicle_observations String   @db.VarChar(255)
+  created_at           DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at           DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+
+  @@index([provider_service_id], map: "request_options_provider_service_id_foreign")
+  @@index([request_id], map: "request_options_request_id_foreign")
+}
+
+model request_services {
+  id                        Int      @id @default(autoincrement()) @db.UnsignedInt
+  request_id                String   @db.VarChar(255)
+  type                      String   @db.VarChar(255)
+  created_at                DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at                DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  base_price                Float    @default(0.00) @db.Float
+  distance_cost             Float    @default(0.00) @db.Float
+  time_cost                 Float    @default(0.00) @db.Float
+  total                     Float    @default(0.00) @db.Float
+  min_price_additional_cost Float    @default(0.00) @db.Float
+  category_id               Int?     @db.UnsignedInt
+  estimated_price           Float    @default(0.00)
+  cancel_price              Float    @default(0.00)
+  observation_note          String   @default("") @db.VarChar(255)
+
+  @@index([category_id], map: "request_services_category_id_foreign")
+  @@index([request_id], map: "request_services_request_id_index")
+  @@index([type], map: "request_services_type_index")
+}
+
+model review_provider {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  provider_id Int      @db.UnsignedInt
+  rating      Int
+  comment     String   @db.VarChar(255)
+  created_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  request_id  Int      @db.UnsignedInt
+  user_id     Int      @db.UnsignedInt
+
+  @@index([user_id], map: "review_walker_owner_id_foreign")
+  @@index([request_id], map: "review_walker_request_id_foreign")
+  @@index([provider_id], map: "review_walker_walker_id_foreign")
+}
+
+model review_user {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  provider_id Int      @db.UnsignedInt
+  rating      Int
+  comment     String   @db.VarChar(255)
+  created_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at  DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  request_id  Int      @db.UnsignedInt
+  user_id     Int      @db.UnsignedInt
+
+  @@index([user_id], map: "review_dog_owner_id_foreign")
+  @@index([request_id], map: "review_dog_request_id_foreign")
+  @@index([provider_id], map: "review_dog_walker_id_foreign")
+}
+
+model schedule_meta {
+  id             Int      @id @default(autoincrement()) @db.UnsignedInt
+  schedule_id    Int
+  day            Int
+  ends_on        DateTime @db.Date
+  created_at     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  started_on     Float    @db.Float
+  seeding_status Float    @db.Float
+}
+
+model scheduled_requests {
+  id                           Int      @id @default(autoincrement()) @db.UnsignedInt
+  user_id                      Int?     @db.UnsignedInt
+  latitude                     Float
+  longitude                    Float
+  dest_latitude                Float    @default(0.00000000)
+  dest_longitude               Float    @default(0.00000000)
+  time_zone                    String   @db.VarChar(255)
+  src_address                  String   @db.VarChar(255)
+  dest_address                 String   @db.VarChar(255)
+  promo_code                   String   @db.VarChar(255)
+  promo_id                     Int      @default(0)
+  payment_mode                 Int      @default(0)
+  created_at                   DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at                   DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  server_start_time            DateTime @db.DateTime(0)
+  start_time                   DateTime @db.DateTime(0)
+  retryflag                    Int      @default(0)
+  type                         String   @default("1") @db.VarChar(255)
+  category_id                  Int?     @db.UnsignedInt
+  vehicle_brand                String   @db.VarChar(255)
+  vehicle_plate                String   @db.VarChar(255)
+  vehicle_observations         String   @db.VarChar(255)
+  location_id                  Int?     @db.UnsignedInt
+  provider_id                  Int?     @db.UnsignedInt
+  is_cancelled_by_user         Int      @default(0) @db.TinyInt
+  is_cancelled_by_provider     Int      @default(0) @db.TinyInt
+  reason_cancelation           String?  @db.VarChar(255)
+  is_confirmed_by_provider     Int      @default(0) @db.TinyInt
+  cancelled                    Boolean  @default(false)
+  cancelled_by_id              Int
+  is_started                   Int?     @default(0) @db.UnsignedInt
+  check_limit_transaction_id   Int?     @db.UnsignedInt
+  request_price_transaction_id Int      @default(0) @db.UnsignedInt
+  card_payment                 Float?
+  is_base_fee_paid             Int      @db.UnsignedInt
+  is_paid                      Int      @default(0) @db.UnsignedInt
+  provider_commission          Float
+  total                        Float
+  gross_value                  Float
+  is_specific_provider         Int      @default(0) @db.UnsignedInt
+  waiting_user_change_pay      Boolean  @default(false)
+  obs_service                  String?  @db.Text
+  request_finish_time          DateTime @db.DateTime(0)
+  is_completed                 Int
+  end_time                     String?  @db.VarChar(255)
+
+  @@index([category_id], map: "scheduled_requests_category_id_foreign")
+  @@index([location_id], map: "scheduled_requests_location_id_foreign")
+  @@index([user_id], map: "scheduled_requests_owner_id_foreign")
+  @@index([provider_id], map: "scheduled_requests_provider_id_foreign")
+}
+
+model scheduled_services {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  schedule_id Int
+  type        Int
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+}
+
+model schedules {
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  user_id      Int
+  lockbox_info String   @db.VarChar(255)
+  notes        String   @db.VarChar(255)
+  is_recurring Int
+  start_time   DateTime @db.Time(0)
+  end_time     DateTime @db.Time(0)
+  created_at   DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at   DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  provider_id  Int
+  is_confirmed Int
+}
+
+model settings {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  key           String   @db.VarChar(255)
+  created_at    DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at    DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  value         String?  @db.LongText
+  tool_tip      String   @db.VarChar(255)
+  page          Int
+  category      Int
+  sub_category  Int
+  contact_email String   @db.VarChar(255)
+}
+
+model signature {
+  id              Int       @id @default(autoincrement()) @db.UnsignedInt
+  provider_id     Int?
+  plan_id         Int?
+  finance_id      Int?
+  activity        Int?      @db.TinyInt
+  transaction_id  String?   @db.VarChar(255)
+  next_expiration DateTime? @db.DateTime(0)
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+  charge_type     String?   @db.VarChar(255)
+  is_cancelled    Boolean?  @default(false)
+  payment_id      Int?      @db.UnsignedInt
+  check_billet_at DateTime? @db.Date
+  deleted_at      DateTime? @db.DateTime(0)
+  payment         payment?  @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "signature_payment_id_foreign")
+
+  @@index([payment_id], map: "signature_payment_id_foreign")
+}
+
+model theme {
+  id                               Int      @id @default(autoincrement()) @db.UnsignedInt
+  theme_color                      String   @db.VarChar(255)
+  primary_color                    String   @db.VarChar(255)
+  secondary_color                  String   @db.VarChar(255)
+  hover_color                      String   @db.VarChar(255)
+  logo                             String   @db.VarChar(255)
+  favicon                          String   @db.VarChar(255)
+  created_at                       DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at                       DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  active_color                     String   @db.VarChar(255)
+  background_image_provider_signup String   @db.VarChar(255)
+  background_image_admin_signup    String?  @db.VarChar(255)
+  background_image_corp_signup     String?  @db.VarChar(255)
+  background_image_user_signup     String?  @db.VarChar(255)
+  background_image_home_signup     String?  @db.VarChar(255)
+  app_image_icon                   String?  @db.VarChar(255)
+  is_visible_in_app                Boolean? @default(false)
+  theme_name                       String?  @default("Tema") @db.VarChar(255)
+}
+
+model transaction {
+  id                       Int                      @id @default(autoincrement()) @db.UnsignedInt
+  type                     transaction_type?
+  status                   transaction_status?
+  gross_value              Float                    @db.Float
+  net_value                Float                    @db.Float
+  provider_value           Float                    @db.Float
+  gateway_tax_value        Float                    @db.Float
+  gateway_transaction_id   String                   @db.VarChar(255)
+  created_at               DateTime                 @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at               DateTime                 @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  split_id                 String                   @db.VarChar(255)
+  split_status             transaction_split_status
+  payment_gateway_error    String?                  @db.VarChar(255)
+  request_id               Int?                     @db.UnsignedInt
+  ledger_id                Int?                     @db.UnsignedInt
+  billet_link              String?                  @db.VarChar(255)
+  signature_id             Int?
+  pix_base64               String?                  @db.Text
+  pix_copy_paste           String?                  @db.Text
+  recipient_id             String?                  @db.VarChar(255)
+  pix_expiration_date_time DateTime?                @db.DateTime(0)
+  ledger                   ledger?                  @relation(fields: [ledger_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "transaction_ledger_id_foreign")
+
+  @@index([ledger_id], map: "transaction_ledger_id_foreign")
+  @@index([request_id], map: "transaction_request_id_foreign")
+}
+
+model user {
+  id                  Int              @id @default(autoincrement()) @db.UnsignedInt
+  first_name          String           @db.VarChar(255)
+  last_name           String           @db.VarChar(255)
+  phone               String           @db.VarChar(255)
+  email               String           @db.VarChar(255)
+  picture             String           @db.VarChar(255)
+  bio                 String           @db.VarChar(255)
+  address             String           @db.Text
+  state               String           @db.VarChar(255)
+  country             String           @db.VarChar(255)
+  zipcode             String           @db.VarChar(255)
+  password            String           @db.VarChar(255)
+  token               String           @db.VarChar(255)
+  token_expiry        Int
+  device_token        String           @db.VarChar(255)
+  device_type         user_device_type
+  login_by            user_login_by
+  social_unique_id    String?          @db.VarChar(255)
+  created_at          DateTime         @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at          DateTime         @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  latitude            Float?           @default(0)
+  longitude           Float?           @default(0)
+  referred_by         Int?
+  debt                Float            @default(0.00) @db.Float
+  timezone            String           @default("UTC") @db.VarChar(255)
+  deleted_at          DateTime?        @db.Timestamp(0)
+  rate                Float            @default(0.00) @db.Float
+  rate_count          BigInt           @default(0)
+  promo_count         BigInt           @default(0)
+  is_referee          Int              @default(0) @db.TinyInt
+  user_id             Int?
+  payment_voucher     Int              @default(1)
+  payment_money       Int              @default(1)
+  payment_card        Int              @default(1)
+  document            String?          @db.VarChar(255)
+  gender              user_gender?     @default(other)
+  sms_validation_code String?          @db.VarChar(255)
+  sms_validation_time DateTime?        @db.DateTime(0)
+  history             String           @db.VarChar(255)
+  status_id           Int              @default(1) @db.UnsignedInt
+  address_number      String           @db.VarChar(255)
+  address_complements String           @db.VarChar(255)
+  address_neighbour   String           @db.VarChar(255)
+  address_city        String           @db.VarChar(255)
+  location_id         Int?             @db.UnsignedInt
+  register_by         Int?             @db.UnsignedInt
+  remember_token      String           @db.VarChar(255)
+  theme_id            Int?             @db.UnsignedInt
+  request_help        request_help[]
+
+  @@index([status_id], map: "FK_user_status_id")
+  @@index([email], map: "owner_email_index")
+  @@index([location_id], map: "user_location_id_foreign")
+  @@index([register_by], map: "user_register_by_foreign")
+  @@index([theme_id], map: "user_theme_id_index")
+}
+
+model user_promo_used {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  code_id    Int      @db.UnsignedInt
+  user_id    Int      @db.UnsignedInt
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+
+  @@index([code_id], map: "user_promo_used_code_id_index")
+  @@index([user_id], map: "user_promo_used_user_id_index")
+}
+
+model user_status {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  name       String   @db.VarChar(255)
+  created_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model users {
+  id             Int      @id @default(autoincrement()) @db.UnsignedInt
+  name           String   @db.VarChar(255)
+  email          String   @unique(map: "users_email_unique") @db.VarChar(255)
+  password       String   @db.VarChar(60)
+  remember_token String?  @db.VarChar(100)
+  created_at     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+  updated_at     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
+}
+
+model withdraw {
+  id                                                Int            @id @default(autoincrement()) @db.UnsignedInt
+  finance_withdraw_id                               Int            @db.UnsignedInt
+  finance_withdraw_tax_id                           Int?           @db.UnsignedInt
+  cnab_file_id                                      Int?           @db.UnsignedInt
+  type                                              withdraw_type?
+  bank_receipt_url                                  String?        @db.VarChar(255)
+  created_at                                        DateTime?      @db.Timestamp(0)
+  updated_at                                        DateTime?      @db.Timestamp(0)
+  error_msg                                         String?        @db.VarChar(255)
+  cnab_files                                        cnab_files?    @relation(fields: [cnab_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "withdraw_cnab_file_id_foreign")
+  finance_withdraw_finance_withdraw_idTofinance     finance        @relation("withdraw_finance_withdraw_idTofinance", fields: [finance_withdraw_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "withdraw_finance_withdraw_id_foreign")
+  finance_withdraw_finance_withdraw_tax_idTofinance finance?       @relation("withdraw_finance_withdraw_tax_idTofinance", fields: [finance_withdraw_tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "withdraw_finance_withdraw_tax_id_foreign")
+
+  @@index([cnab_file_id], map: "withdraw_cnab_file_id_foreign")
+  @@index([finance_withdraw_id], map: "withdraw_finance_withdraw_id_foreign")
+  @@index([finance_withdraw_tax_id], map: "withdraw_finance_withdraw_tax_id_foreign")
+}
+
+enum notification_send_to {
+  everyone
+  specific
+}
+
+enum transaction_type {
+  base_tax
+  cancel_tax
+  request_price
+  check_limit_transaction
+  request_single_transaction
+  subscription_transaction
+}
+
+enum notification_type {
+  user
+  provider
+  both
+}
+
+enum notifications_provider_step_register_step {
+  basicinfo
+  vehicle
+  bankinginfo
+  docs
+  approved
+}
+
+enum transaction_status {
+  processing
+  authorized
+  paid
+  waiting_payment
+  pending_refund
+  refunded
+  refused
+  error
+}
+
+enum institution_type {
+  company
+  individual
+  govern
+}
+
+enum notification_platform {
+  android
+  ios
+  both
+}
+
+enum profile_type {
+  admin
+  partner
+  service_manager
+}
+
+enum request_help_author {
+  user
+  provider
+}
+
+enum withdraw_type {
+  requested
+  awaiting_return
+  concluded
+  error
+  rejected
+}
+
+enum location_service_commission_type {
+  percentage
+  value
+}
+
+enum plan_client {
+  Provider
+  User
+}
+
+enum provider_services_commission_type {
+  percentage
+  value
+}
+
+enum admin_type {
+  admin
+  partner
+  service_manager
+}
+
+enum provider_type_commission_type {
+  percentage
+  value
+}
+
+enum transaction_split_status {
+  waiting_funds
+  paid
+}
+
+enum ledger_bank_account_person_type {
+  individual
+  company
+}
+
+enum institution_acknowledgement {
+  google
+  youtube
+  family
+  friends
+  radio
+  facebook
+  tv
+  other
+}
+
+enum provider_login_by {
+  manual
+  facebook
+  google
+  apple
+}
+
+enum user_device_type {
+  android
+  ios
+}
+
+enum user_login_by {
+  manual
+  facebook
+  google
+}
+
+enum user_gender {
+  male
+  female
+  other
+}
+
+enum provider_register_step {
+  basicinfo
+  vehicle
+  docs
+  bankinginfo
+  approved
+}
+
+enum provider_gender {
+  male
+  female
+  other
+}

@@ -1,0 +1,25 @@
+{
+  "name": "update-types-category-id",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.3.1",
+    "fastify": "^4.23.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.6.1"
+  },
+  "devDependencies": {
+    "@types/mysql": "^2.15.21",
+    "prisma": "^5.3.1",
+    "tsx": "^3.12.10"
+  }
+}
